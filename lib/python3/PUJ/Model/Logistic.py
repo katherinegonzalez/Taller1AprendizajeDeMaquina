@@ -51,16 +51,32 @@ class Logistic( Linear ):
       J  = numpy.log( z[ self.m_Y == 1 ] + 1e-12 ).sum( )
       J += numpy.log( 1 - z[ self.m_Y == 0 ] + 1e-12 ).sum( )
       J /= -float( self.m_X.shape[ 0 ] )
+            
+
+      ### Nueva parte del codigo
+      ### Cresta
+      valor_lambda = 100
+      
+      g = self.m_Model.parameters( )
+      ww = g[ 1 : , : ]
+      bb = g[ 0 , 0 ]
+      
+      J_Cres = valor_lambda * (ww.T@ww+(bb*bb))
+      J += J_Cres 
+
+      ### Fin nueva parte del codigo
+      
       if need_gradient:
 
         g = numpy.zeros( self.m_Model.parameters( ).shape )
-        g[ 0 , 0 ] = z.mean( ) - self.m_mY
+        g[ 0 , 0 ] = z.mean( ) - self.m_mY + 2*valor_lambda*g[ 0 , 0 ]
         g[ 1 : , : ] = \
           numpy.matrix( numpy.multiply( self.m_X, z ) ).mean( axis = 0 ).T - \
-          self.m_XhY
+          self.m_XhY + 2*valor_lambda*g[ 1 : , : ].sum( )
         return [ J, g ]
       else:
         return [ J, None ]
+      
       # end if
     # end def
   # end class
